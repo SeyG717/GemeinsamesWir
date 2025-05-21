@@ -14,13 +14,20 @@ const db = firebase.database();
 
 let kategorie = "";
 
-if (window.location.pathname.includes("einkauf")) {
-  kategorie = "einkauf";
+if (window.location.pathname.includes("einkauf") && !window.location.pathname.includes("html")) {
+  kategorie = ""; // keine direkte Liste, nur Kategorie-Übersicht
+} else if (window.location.pathname.includes("wohnung")) {
+  kategorie = "einkauf/wohnung";
+} else if (window.location.pathname.includes("lebensmittel")) {
+  kategorie = "einkauf/lebensmittel";
+} else if (window.location.pathname.includes("drogerie")) {
+  kategorie = "einkauf/drogerie";
 } else if (window.location.pathname.includes("ausgaben")) {
   kategorie = "ausgaben";
 } else if (window.location.pathname.includes("ziele")) {
   kategorie = "ziele";
 }
+
 
 function hinzufuegen() {
   const eingabe = document.getElementById("eintrag").value.trim();
