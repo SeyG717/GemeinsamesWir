@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🥦 Lebensmittel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🥦 Lebensmittel</h1>
+    <div class="input-area">
+      <input id="eintrag" type="text" placeholder="Lebensmittel eintragen..." />
+      <button onclick="hinzufuegen()">➕</button>
+    </div>
+    <ul id="liste"></ul>
+    <a class="back" href="einkauf.html">⬅️ Zurück</a>
+  </div>
+
+  <!-- Firebase & Script -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="script.js?v=2"></script>
+</body>
+</html>
+
