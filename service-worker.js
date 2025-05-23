@@ -18,14 +18,15 @@ self.addEventListener("install", function (e) {
         "/termine.html",
         "/manifest.json",
         "/icon-192.png",
-        "/icon-512.png"
+        "/icon-512.png",
+        "/profil.jpg" // NEU: Profilbild hinzufügen
       ]);
     })
   );
 });
 
 self.addEventListener("activate", event => {
-  clients.claim(); // sorgt dafür, dass sofort neue Version aktiv wird
+  clients.claim(); // neue Version direkt aktiv
 });
 
 self.addEventListener("fetch", function (e) {
