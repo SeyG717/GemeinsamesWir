@@ -1,14 +1,52 @@
+/* =================================== */
+/* Allgemeine Styles (für alle Seiten) */
+/* =================================== */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: #f2f2f2;
   margin: 0;
   padding: 0;
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 40px;
+}
+
+/* =================================== */
+/* Styles NUR für die Startseite (index.html) */
+/* =================================== */
+body.home {
   display: flex;
+  flex-direction: column; /* Ordnet die Elemente untereinander an */
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  padding: 50px;
 }
 
+a.button {
+  display: inline-block;
+  padding: 20px 30px;
+  margin: 20px;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  font-size: 18px;
+  border-radius: 10px;
+  transition: background-color 0.2s;
+  width: 250px; /* Eine feste Breite für den Desktop */
+  box-sizing: border-box;
+}
+
+a.button:hover {
+  background-color: #0056b3;
+}
+
+/* =================================== */
+/* Styles für die Unterseiten (Listen) */
+/* =================================== */
 .container {
   background: #fff;
   padding: 30px;
@@ -17,11 +55,13 @@ body {
   width: 90%;
   max-width: 500px;
   animation: fadeIn 0.5s ease;
-}
-
-h1 {
-  text-align: center;
-  color: #333;
+  
+  /* Zentrierung für die Container-Seiten */
+  margin: auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .input-area {
@@ -98,4 +138,27 @@ li button {
 @keyframes slideIn {
   from { opacity: 0; transform: translateX(-20px); }
   to { opacity: 1; transform: translateX(0); }
+}
+
+/* =================================== */
+/* Styles für mobile Geräte (Handy)   */
+/* =================================== */
+@media (max-width: 600px) {
+
+  /* Passt den Abstand auf der Startseite an */
+  body.home {
+    padding: 20px;
+  }
+  
+  /* Passt den Abstand auf den Unterseiten an */
+  .container {
+    padding: 20px;
+  }
+
+  /* Die Regel für die Buttons auf der Startseite */
+  a.button {
+    width: 100%;    /* Volle Breite auf dem Handy */
+    margin: 15px 0; 
+    font-size: 20px;
+  }
 }
