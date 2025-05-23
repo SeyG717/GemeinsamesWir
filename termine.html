@@ -10,9 +10,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
-    #calendar {
+    #calendar, #terminListe {
       max-width: 900px;
-      margin: 40px auto;
+      margin: 20px auto;
       background: white;
       padding: 20px;
       border-radius: 12px;
@@ -33,6 +33,24 @@
       padding: 10px;
       font-size: 16px;
     }
+    .toggle-button {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .termin-item {
+      border-bottom: 1px solid #eee;
+      padding: 10px 0;
+    }
+    .termin-actions button {
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
@@ -46,7 +64,10 @@
     <button type="submit">➕ Termin hinzufügen</button>
   </form>
 
+  <button id="toggleAnsicht" class="toggle-button">📋 Zur Listenansicht</button>
+
   <div id="calendar"></div>
+  <div id="terminListe" style="display: none;"></div>
 
   <script>
     const firebaseConfig = {
@@ -83,25 +104,76 @@
       document.getElementById("terminForm").reset();
     });
 
-    document.addEventListener('DOMContentLoaded', function () {
-      const calendarEl = document.getElementById('calendar');
-      const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'de',
-        events: []
+    const calendarEl = document.getElementById('calendar');
+    const terminListeEl = document.getElementById('terminListe');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      locale: 'de',
+      events: []
+    });
+
+    const termine = {};
+
+    db.ref("termine").on("child_added", function(snapshot) {
+      const id = snapshot.key;
+      const termin = snapshot.val();
+      termine[id] = termin;
+
+      calendar.addEvent({
+        title: termin.title,
+        start: `${termin.datum}T${termin.uhrzeit}`,
+        description: termin.beschreibung || "",
+        allDay: false
       });
 
-      db.ref("termine").on("child_added", function(snapshot) {
-        const termin = snapshot.val();
-        calendar.addEvent({
-          title: termin.title,
-          start: `${termin.datum}T${termin.uhrzeit}`,
-          description: termin.beschreibung || "",
-          allDay: false
-        });
-      });
+      renderTermine();
+    });
 
-      calendar.render();
+    db.ref("termine").on("child_removed", function(snapshot) {
+      delete termine[snapshot.key];
+      renderTermine();
+      location.reload(); // aktualisiert Kalender
+    });
+
+    function renderTermine() {
+      terminListeEl.innerHTML = "";
+      const sorted = Object.entries(termine).sort((a, b) => a[1].timestamp - b[1].timestamp);
+      sorted.forEach(([id, t]) => {
+        const div = document.createElement("div");
+        div.className = "termin-item";
+        div.innerHTML = `
+          <strong>${t.title}</strong><br>
+          📅 ${t.datum} ⏰ ${t.uhrzeit}<br>
+          ${t.beschreibung ? "📝 " + t.beschreibung : ""}
+          <div class="termin-actions">
+            <button onclick="loeschen('${id}')">🗑️</button>
+            <button onclick="bearbeiten('${id}')">✏️</button>
+          </div>
+        `;
+        terminListeEl.appendChild(div);
+      });
+    }
+
+    function loeschen(id) {
+      db.ref("termine/" + id).remove();
+    }
+
+    function bearbeiten(id) {
+      const t = termine[id];
+      document.getElementById("title").value = t.title;
+      document.getElementById("datum").value = t.datum;
+      document.getElementById("uhrzeit").value = t.uhrzeit;
+      document.getElementById("beschreibung").value = t.beschreibung;
+      loeschen(id);
+    }
+
+    calendar.render();
+
+    document.getElementById("toggleAnsicht").addEventListener("click", () => {
+      const kalenderAktiv = calendarEl.style.display !== "none";
+      calendarEl.style.display = kalenderAktiv ? "none" : "block";
+      terminListeEl.style.display = kalenderAktiv ? "block" : "none";
+      document.getElementById("toggleAnsicht").textContent = kalenderAktiv ? "📅 Zum Kalender" : "📋 Zur Listenansicht";
     });
   </script>
 </body>
