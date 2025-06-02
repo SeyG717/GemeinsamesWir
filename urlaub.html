@@ -9,12 +9,29 @@
     .kategorie-block {
       margin-bottom: 10px;
     }
-    .kategorie-block input[type="text"] {
-      width: 40%;
-      display: inline-block;
+    .kategorie-block input[type="text"], .kategorie-block select {
+      width: 100%;
+      display: block;
+      margin: 5px 0;
+      padding: 10px;
+      font-size: 16px;
     }
     .kategorie-block label {
       margin: 0 10px;
+    }
+    .kategorie-eintrag {
+      margin-top: 10px;
+      padding-left: 10px;
+    }
+    button.loeschen {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      margin-top: 10px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -57,13 +74,47 @@
       const container = document.getElementById("kategorieContainer");
       const div = document.createElement("div");
       div.className = "kategorie-block";
+      const id = Date.now();
       div.innerHTML = `
+        <select class="kategorieSelect" onchange="toggleEigeneKategorie(this)">
+          <option value="">+ Eigene Kategorie eingeben</option>
+        </select>
         <input type="text" placeholder="Kategorie" class="kategorieName" />
-        <label>✅ <input type="radio" name="verfuegbar${Date.now()}" value="Ja" checked></label>
-        <label>❌ <input type="radio" name="verfuegbar${Date.now()}" value="Nein"></label>
+        <label>✅ <input type="radio" name="verfuegbar${id}" value="Ja" checked></label>
+        <label>❌ <input type="radio" name="verfuegbar${id}" value="Nein"></label>
         <input type="text" placeholder="Kommentar" class="kommentar" />
       `;
       container.appendChild(div);
+      ladeGespeicherteKategorien();
+    }
+
+    function toggleEigeneKategorie(select) {
+      const input = select.parentElement.querySelector(".kategorieName");
+      if (select.value) {
+        input.value = select.value;
+        input.disabled = true;
+      } else {
+        input.value = "";
+        input.disabled = false;
+      }
+    }
+
+    function ladeGespeicherteKategorien() {
+      const dropdowns = document.querySelectorAll(".kategorieSelect");
+      firebase.database().ref("urlaub_kategorien").once("value", snapshot => {
+        const kategorien = snapshot.val();
+        if (!kategorien) return;
+        dropdowns.forEach(select => {
+          if (select.options.length <= 1) {
+            Object.values(kategorien).forEach(k => {
+              const opt = document.createElement("option");
+              opt.value = k.name;
+              opt.textContent = k.name;
+              select.appendChild(opt);
+            });
+          }
+        });
+      });
     }
 
     function eintragSpeichern() {
@@ -79,7 +130,19 @@
         if (name) kategorien.push({ name, verfuegbar, kommentar });
       });
 
-      db.push({ ort, preis, kategorien, timestamp: Date.now() });
+      const neuerEintrag = db.push({ ort, preis, kategorien, timestamp: Date.now() });
+
+      // Neue Kategorien speichern
+      kategorien.forEach(k => {
+        const ref = firebase.database().ref("urlaub_kategorien");
+        ref.orderByChild("name").equalTo(k.name).once("value", snapshot => {
+          if (!snapshot.exists()) {
+            ref.push({ name: k.name });
+          }
+        });
+      });
+
+      // Felder leeren
       document.getElementById("urlaubsort").value = "";
       document.getElementById("preis").value = "";
       document.getElementById("kategorieContainer").innerHTML = "";
@@ -88,16 +151,26 @@
     db.on("child_added", snapshot => {
       const eintrag = snapshot.val();
       const li = document.createElement("li");
+      li.setAttribute("data-id", snapshot.key);
       li.innerHTML = `
         <strong style="font-size:18px;">${eintrag.ort}</strong> – 💶 <b>${eintrag.preis.toFixed(2)} €</b><br>
         <div class="kategorie-eintrag">
-            ${eintrag.kategorien.map(k => `
-                <p>📌 <b>${k.name}</b>: ${k.verfuegbar} <i>(${k.kommentar || "kein Kommentar"})</i></p>
-            `).join("")}
+          ${eintrag.kategorien.map(k => `
+            <p>📌 <b>${k.name}</b>: ${k.verfuegbar} <i>(${k.kommentar || "kein Kommentar"})</i></p>
+          `).join("")}
         </div>
-        `;
-
+        <button class="loeschen" onclick="eintragLoeschen('${snapshot.key}')">🗑️ Löschen</button>
+      `;
       document.getElementById("liste").appendChild(li);
+    });
+
+    function eintragLoeschen(id) {
+      db.child(id).remove();
+    }
+
+    db.on("child_removed", snapshot => {
+      const liToRemove = document.querySelector(`li[data-id="${snapshot.key}"]`);
+      if (liToRemove) liToRemove.remove();
     });
   </script>
 </body>
