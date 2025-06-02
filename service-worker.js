@@ -19,7 +19,8 @@ self.addEventListener("install", function (e) {
         "/manifest.json",
         "/icon-192.png",
         "/icon-512.png",
-        "/profil.jpg" // NEU: Profilbild hinzufügen
+        "/profil.jpg",
+        "/urlaub.html" // NEU: Profilbild hinzufügen
       ]);
     })
   );

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🌴 Urlaub vergleichen</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .kategorie-block {
+      margin-bottom: 10px;
+    }
+    .kategorie-block input[type="text"] {
+      width: 40%;
+      display: inline-block;
+    }
+    .kategorie-block label {
+      margin: 0 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌴 Urlaubsort Vergleich</h1>
+    
+    <input id="urlaubsort" type="text" placeholder="Urlaubsort" />
+    <input id="preis" type="number" placeholder="Preis in €" />
+    
+    <h3>Kategorien hinzufügen</h3>
+    <div id="kategorieContainer"></div>
+    <button onclick="kategorieHinzufuegen()">➕ Kategorie</button>
+
+    <br><br>
+    <button onclick="eintragSpeichern()">💾 Speichern</button>
+
+    <ul id="liste"></ul>
+    <a class="back" href="index.html">⬅️ Zurück</a>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBpoA6lSN5uDQcwvAWrV2qo8ZoA8z6kc_w",
+      authDomain: "gemeinsames-wir.firebaseapp.com",
+      databaseURL: "https://gemeinsames-wir-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gemeinsames-wir",
+      storageBucket: "gemeinsames-wir.firebasestorage.app",
+      messagingSenderId: "731645990105",
+      appId: "1:731645990105:web:99bb6668ef612385f45ac8"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref("urlaub");
+
+    function kategorieHinzufuegen() {
+      const container = document.getElementById("kategorieContainer");
+      const div = document.createElement("div");
+      div.className = "kategorie-block";
+      div.innerHTML = `
+        <input type="text" placeholder="Kategorie" class="kategorieName" />
+        <label>✅ <input type="radio" name="verfuegbar${Date.now()}" value="Ja" checked></label>
+        <label>❌ <input type="radio" name="verfuegbar${Date.now()}" value="Nein"></label>
+        <input type="text" placeholder="Kommentar" class="kommentar" />
+      `;
+      container.appendChild(div);
+    }
+
+    function eintragSpeichern() {
+      const ort = document.getElementById("urlaubsort").value.trim();
+      const preis = parseFloat(document.getElementById("preis").value);
+      if (!ort || isNaN(preis)) return alert("Bitte Ort und Preis angeben.");
+
+      const kategorien = [];
+      document.querySelectorAll(".kategorie-block").forEach(div => {
+        const name = div.querySelector(".kategorieName").value.trim();
+        const verfuegbar = div.querySelector("input[type='radio']:checked").value;
+        const kommentar = div.querySelector(".kommentar").value.trim();
+        if (name) kategorien.push({ name, verfuegbar, kommentar });
+      });
+
+      db.push({ ort, preis, kategorien, timestamp: Date.now() });
+      document.getElementById("urlaubsort").value = "";
+      document.getElementById("preis").value = "";
+      document.getElementById("kategorieContainer").innerHTML = "";
+    }
+
+    db.on("child_added", snapshot => {
+      const eintrag = snapshot.val();
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <strong style="font-size:18px;">${eintrag.ort}</strong> – 💶 <b>${eintrag.preis.toFixed(2)} €</b><br>
+        <div class="kategorie-eintrag">
+            ${eintrag.kategorien.map(k => `
+                <p>📌 <b>${k.name}</b>: ${k.verfuegbar} <i>(${k.kommentar || "kein Kommentar"})</i></p>
+            `).join("")}
+        </div>
+        `;
+
+      document.getElementById("liste").appendChild(li);
+    });
+  </script>
+</body>
+</html>
