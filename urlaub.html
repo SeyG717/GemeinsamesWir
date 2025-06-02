@@ -130,9 +130,9 @@
         if (name) kategorien.push({ name, verfuegbar, kommentar });
       });
 
-      const neuerEintrag = db.push({ ort, preis, kategorien, timestamp: Date.now() });
+      db.push({ ort, preis, kategorien, timestamp: Date.now() });
 
-      // Neue Kategorien speichern
+      // Neue Kategorien speichern (nur wenn noch nicht vorhanden)
       kategorien.forEach(k => {
         const ref = firebase.database().ref("urlaub_kategorien");
         ref.orderByChild("name").equalTo(k.name).once("value", snapshot => {
@@ -142,7 +142,6 @@
         });
       });
 
-      // Felder leeren
       document.getElementById("urlaubsort").value = "";
       document.getElementById("preis").value = "";
       document.getElementById("kategorieContainer").innerHTML = "";
