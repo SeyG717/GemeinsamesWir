@@ -58,9 +58,19 @@
 
   <form id="terminForm">
     <input type="text" id="title" placeholder="Titel" required>
+
+    <label for="datum">📅 Startdatum</label>
     <input type="date" id="datum" required>
+
+    <label for="enddatum">📅 Enddatum</label>
+    <input type="date" id="enddatum" required>
+
+    <label for="uhrzeit">⏰ Uhrzeit</label>
     <input type="time" id="uhrzeit" required>
-    <textarea id="beschreibung" placeholder="Beschreibung (optional)"></textarea>
+
+    <label for="beschreibung">📝 Beschreibung (optional)</label>
+    <textarea id="beschreibung" placeholder="Beschreibung"></textarea>
+
     <button type="submit">➕ Termin hinzufügen</button>
   </form>
 
@@ -75,34 +85,13 @@
       authDomain: "gemeinsames-wir.firebaseapp.com",
       databaseURL: "https://gemeinsames-wir-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "gemeinsames-wir",
-      storageBucket: "gemeinsames-wir.firebasestorage.app",
+      storageBucket: "gemeinsames-wir.appspot.com",
       messagingSenderId: "731645990105",
       appId: "1:731645990105:web:99bb6668ef612385f45ac8"
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    document.getElementById("terminForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-
-      const title = document.getElementById("title").value.trim();
-      const datum = document.getElementById("datum").value;
-      const uhrzeit = document.getElementById("uhrzeit").value;
-      const beschreibung = document.getElementById("beschreibung").value.trim();
-
-      const timestamp = new Date(`${datum}T${uhrzeit}`).getTime();
-
-      db.ref("termine").push({
-        title,
-        datum,
-        uhrzeit,
-        beschreibung,
-        timestamp
-      });
-
-      document.getElementById("terminForm").reset();
-    });
 
     const calendarEl = document.getElementById('calendar');
     const terminListeEl = document.getElementById('terminListe');
@@ -114,6 +103,29 @@
 
     const termine = {};
 
+    document.getElementById("terminForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const title = document.getElementById("title").value.trim();
+      const datum = document.getElementById("datum").value;
+      const enddatum = document.getElementById("enddatum").value;
+      const uhrzeit = document.getElementById("uhrzeit").value;
+      const beschreibung = document.getElementById("beschreibung").value.trim();
+
+      const timestamp = new Date(`${datum}T${uhrzeit}`).getTime();
+
+      db.ref("termine").push({
+        title,
+        datum,
+        enddatum,
+        uhrzeit,
+        beschreibung,
+        timestamp
+      });
+
+      document.getElementById("terminForm").reset();
+    });
+
     db.ref("termine").on("child_added", function(snapshot) {
       const id = snapshot.key;
       const termin = snapshot.val();
@@ -122,6 +134,7 @@
       calendar.addEvent({
         title: termin.title,
         start: `${termin.datum}T${termin.uhrzeit}`,
+        end: termin.enddatum ? `${termin.enddatum}T23:59:59` : null,
         description: termin.beschreibung || "",
         allDay: false
       });
@@ -132,7 +145,7 @@
     db.ref("termine").on("child_removed", function(snapshot) {
       delete termine[snapshot.key];
       renderTermine();
-      location.reload(); // aktualisiert Kalender
+      location.reload();
     });
 
     function renderTermine() {
@@ -143,7 +156,7 @@
         div.className = "termin-item";
         div.innerHTML = `
           <strong>${t.title}</strong><br>
-          📅 ${t.datum} ⏰ ${t.uhrzeit}<br>
+          📅 ${t.datum} ${t.enddatum && t.enddatum !== t.datum ? `bis ${t.enddatum}` : ""} ⏰ ${t.uhrzeit}<br>
           ${t.beschreibung ? "📝 " + t.beschreibung : ""}
           <div class="termin-actions">
             <button onclick="loeschen('${id}')">🗑️</button>
@@ -162,6 +175,7 @@
       const t = termine[id];
       document.getElementById("title").value = t.title;
       document.getElementById("datum").value = t.datum;
+      document.getElementById("enddatum").value = t.enddatum;
       document.getElementById("uhrzeit").value = t.uhrzeit;
       document.getElementById("beschreibung").value = t.beschreibung;
       loeschen(id);
