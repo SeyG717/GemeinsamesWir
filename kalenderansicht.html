@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📅 Kalender-Ansicht</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    #calendar {
+      max-width: 900px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center;">📅 Kalender-Übersicht</h1>
+  <div id="calendar"></div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBpoA6lSN5uDQcwvAWrV2qo8ZoA8z6kc_w",
+      authDomain: "gemeinsames-wir.firebaseapp.com",
+      databaseURL: "https://gemeinsames-wir-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "gemeinsames-wir",
+      storageBucket: "gemeinsames-wir.firebasestorage.app",
+      messagingSenderId: "731645990105",
+      appId: "1:731645990105:web:99bb6668ef612385f45ac8"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      locale: 'de',
+      events: []
+    });
+
+    db.ref("termine").on("child_added", function(snapshot) {
+      const termin = snapshot.val();
+      calendar.addEvent({
+        title: termin.title,
+        start: `${termin.datum}T${termin.uhrzeit}`,
+        description: termin.beschreibung || "",
+        allDay: false
+      });
+    });
+
+    calendar.render();
+  </script>
+</body>
+</html>
